@@ -78,6 +78,26 @@ class _TodoListPageState extends State<TodoListPage> {
     _saveTodos();
   }
 
+  Future<bool?> _confirmDelete(TodoItem todo) {
+    return showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        message: Text('"${todo.title}" を削除しますか？'),
+        actions: [
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('削除'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('キャンセル'),
+        ),
+      ),
+    );
+  }
+
   void _editTodo(String id) {
     final index = _todos.indexWhere((t) => t.id == id);
     if (index == -1) return;
@@ -203,11 +223,26 @@ class _TodoListPageState extends State<TodoListPage> {
                       ),
                       itemBuilder: (context, index) {
                         final todo = filtered[index];
-                        return TodoTile(
-                          todo: todo,
-                          onToggle: () => _toggleTodo(todo.id),
-                          onDelete: () => _removeTodo(todo.id),
-                          onEdit: () => _editTodo(todo.id),
+                        return Dismissible(
+                          key: Key(todo.id),
+                          direction: DismissDirection.endToStart,
+                          background: const SizedBox.shrink(),
+                          secondaryBackground: Container(
+                            color: CupertinoColors.destructiveRed,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            child: const Icon(
+                              CupertinoIcons.trash,
+                              color: CupertinoColors.white,
+                            ),
+                          ),
+                          confirmDismiss: (_) => _confirmDelete(todo),
+                          onDismissed: (_) => _removeTodo(todo.id),
+                          child: TodoTile(
+                            todo: todo,
+                            onToggle: () => _toggleTodo(todo.id),
+                            onEdit: () => _editTodo(todo.id),
+                          ),
                         );
                       },
                     ),

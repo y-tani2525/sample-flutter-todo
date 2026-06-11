@@ -4,14 +4,12 @@ import '../models/todo_item.dart';
 class TodoTile extends StatelessWidget {
   final TodoItem todo;
   final VoidCallback onToggle;
-  final VoidCallback onDelete;
   final VoidCallback onEdit;
 
   const TodoTile({
     super.key,
     required this.todo,
     required this.onToggle,
-    required this.onDelete,
     required this.onEdit,
   });
 
@@ -49,15 +47,6 @@ class TodoTile extends StatelessWidget {
                       : CupertinoColors.label,
                 ),
               ),
-            ),
-          ),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: onDelete,
-            child: const Icon(
-              CupertinoIcons.trash,
-              color: CupertinoColors.destructiveRed,
-              size: 20,
             ),
           ),
         ],
