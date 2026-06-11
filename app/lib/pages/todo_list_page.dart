@@ -63,6 +63,50 @@ class _TodoListPageState extends State<TodoListPage> {
     _saveTodos();
   }
 
+  void _editTodo(int index) {
+    final controller = TextEditingController(text: _todos[index].title);
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('タスクを編集'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: CupertinoTextField(
+            controller: controller,
+            autofocus: true,
+            onSubmitted: (_) => _saveEdit(context, index, controller),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => _saveEdit(context, index, controller),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    ).then((_) => controller.dispose());
+  }
+
+  void _saveEdit(
+    BuildContext context,
+    int index,
+    TextEditingController controller,
+  ) {
+    final text = controller.text.trim();
+    if (text.isNotEmpty) {
+      setState(() {
+        _todos[index] = _todos[index].copyWith(title: text);
+      });
+      _saveTodos();
+    }
+    Navigator.pop(context);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -127,6 +171,7 @@ class _TodoListPageState extends State<TodoListPage> {
                         todo: _todos[index],
                         onToggle: () => _toggleTodo(index),
                         onDelete: () => _removeTodo(index),
+                        onEdit: () => _editTodo(index),
                       ),
                     ),
             ),

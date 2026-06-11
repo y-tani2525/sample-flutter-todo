@@ -5,12 +5,14 @@ class TodoTile extends StatelessWidget {
   final TodoItem todo;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   const TodoTile({
     super.key,
     required this.todo,
     required this.onToggle,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -33,14 +35,19 @@ class TodoTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              todo.title,
-              style: TextStyle(
-                fontSize: 16,
-                decoration:
-                    todo.done ? TextDecoration.lineThrough : TextDecoration.none,
-                color:
-                    todo.done ? CupertinoColors.systemGrey : CupertinoColors.label,
+            child: GestureDetector(
+              onTap: onEdit,
+              child: Text(
+                todo.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  decoration: todo.done
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                  color: todo.done
+                      ? CupertinoColors.systemGrey
+                      : CupertinoColors.label,
+                ),
               ),
             ),
           ),
