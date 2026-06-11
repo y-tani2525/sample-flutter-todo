@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/todo_item.dart';
+import '../models/todo_filter.dart';
 import '../widgets/todo_tile.dart';
 
 class TodoListPage extends StatefulWidget {
@@ -15,6 +16,18 @@ class _TodoListPageState extends State<TodoListPage> {
 
   final List<TodoItem> _todos = [];
   final TextEditingController _controller = TextEditingController();
+  TodoFilter _filter = TodoFilter.all;
+
+  List<TodoItem> get _filteredTodos {
+    switch (_filter) {
+      case TodoFilter.all:
+        return _todos;
+      case TodoFilter.active:
+        return _todos.where((t) => !t.done).toList();
+      case TodoFilter.done:
+        return _todos.where((t) => t.done).toList();
+    }
+  }
 
   @override
   void initState() {
@@ -49,21 +62,25 @@ class _TodoListPageState extends State<TodoListPage> {
     _saveTodos();
   }
 
-  void _toggleTodo(int index) {
+  void _toggleTodo(String id) {
+    final index = _todos.indexWhere((t) => t.id == id);
+    if (index == -1) return;
     setState(() {
       _todos[index] = _todos[index].copyWith(done: !_todos[index].done);
     });
     _saveTodos();
   }
 
-  void _removeTodo(int index) {
+  void _removeTodo(String id) {
     setState(() {
-      _todos.removeAt(index);
+      _todos.removeWhere((t) => t.id == id);
     });
     _saveTodos();
   }
 
-  void _editTodo(int index) {
+  void _editTodo(String id) {
+    final index = _todos.indexWhere((t) => t.id == id);
+    if (index == -1) return;
     final controller = TextEditingController(text: _todos[index].title);
     showCupertinoDialog<void>(
       context: context,
@@ -115,6 +132,8 @@ class _TodoListPageState extends State<TodoListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _filteredTodos;
+
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
         middle: Text('Todo'),
@@ -149,30 +168,48 @@ class _TodoListPageState extends State<TodoListPage> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: CupertinoSlidingSegmentedControl<TodoFilter>(
+                groupValue: _filter,
+                onValueChanged: (value) {
+                  if (value != null) setState(() => _filter = value);
+                },
+                children: const {
+                  TodoFilter.all: Text('すべて'),
+                  TodoFilter.active: Text('未完了'),
+                  TodoFilter.done: Text('完了済み'),
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
             Expanded(
-              child: _todos.isEmpty
-                  ? const Center(
+              child: filtered.isEmpty
+                  ? Center(
                       child: Text(
-                        'タスクがありません',
-                        style: TextStyle(
+                        _todos.isEmpty ? 'タスクがありません' : '該当するタスクがありません',
+                        style: const TextStyle(
                           color: CupertinoColors.systemGrey,
                           fontSize: 16,
                         ),
                       ),
                     )
                   : ListView.separated(
-                      itemCount: _todos.length,
+                      itemCount: filtered.length,
                       separatorBuilder: (_, __) => Container(
                         height: 0.5,
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         color: CupertinoColors.separator,
                       ),
-                      itemBuilder: (context, index) => TodoTile(
-                        todo: _todos[index],
-                        onToggle: () => _toggleTodo(index),
-                        onDelete: () => _removeTodo(index),
-                        onEdit: () => _editTodo(index),
-                      ),
+                      itemBuilder: (context, index) {
+                        final todo = filtered[index];
+                        return TodoTile(
+                          todo: todo,
+                          onToggle: () => _toggleTodo(todo.id),
+                          onDelete: () => _removeTodo(todo.id),
+                          onEdit: () => _editTodo(todo.id),
+                        );
+                      },
                     ),
             ),
           ],
